@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "metamask-extension-provider": "^3.0.0"
+  }
+}

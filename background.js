@@ -2,19 +2,28 @@
 // background.js
 
 let virtualCardHasNotBeenCreated = true;
-let transactionComplete = false;
-let cardInjected = false;
-let transactionValue = null;
 let ETHtoUSD = null;
 let transactionHexValue = null;
 let registeredCardDetailsTab = null;
 let registeredFormSubmissionTab = null;
 let userEthAccount = null;
 
-chrome.runtime.onStartup.addListener(() => {});
+let ethAccountReadyEvent = "ethAccountReady";
+let transactionPriceReadyEvent = "transactionPriceReady";
+let cardDetailsHaveBeenInjectedInUIEvent = "cardDetailsHaveBeenInjectedInUI";
+let formSubmissionOnReadyEvent = "formSubmissionOnReady";
+let registerToReceiveFormSubmissionOnReadyEvent =
+	"registerToReceiveFormSubmissionOnReady";
+let registerToReceiveCardDetailsEvent = "registerToReceiveCardDetails";
+let walletCompletedEthTransactionEvent = "walletCompletedEthTransaction";
 
 console.log("RUNNING BACKGROUND JS");
 chrome.runtime.onInstalled.addListener(() => {
+	chrome.storage.sync.get(["ETHtoUSD"], function (result) {
+		ETHtoUSD = result.ETHtoUSD;
+		console.log("ETHtoUSD is fetched " + result.ETHtoUSD);
+	});
+
 	setInterval(() => {
 		let coinbaseURL =
 			"https://api.coinbase.com/v2/exchange-rates?currency=ETH";
@@ -23,12 +32,18 @@ chrome.runtime.onInstalled.addListener(() => {
 		fetch(coinbaseURL)
 			.then((response) => response.json())
 			.then((data) => {
-				console.log("ETH TO USD set in bkacground.js");
-				console.log(data);
 				result = data["data"]["rates"]["USD"];
 				if (result != null) {
 					ETHtoUSD = result;
-					console.log(ETHtoUSD);
+					chrome.storage.sync.set(
+						{ ETHtoUSD: result },
+						function () {
+							console.log(
+								"ETHtoUSD updated in storage to " +
+									result
+							);
+						}
+					);
 				}
 			});
 	}, 7000);
@@ -38,13 +53,13 @@ chrome.runtime.onInstalled.addListener(() => {
 		sender,
 		sendResponse
 	) {
-		if (request.contentEvent === "ethAccountReady") {
+		if (request.contentEvent === ethAccountReadyEvent) {
 			console.log(
 				"ethAccountReady passes event check and now executes callback"
 			);
 
 			if (userEthAccount === null) {
-				userEthAccount = request.data
+				userEthAccount = request.data;
 			}
 		}
 	});
@@ -54,25 +69,25 @@ chrome.runtime.onInstalled.addListener(() => {
 		sender,
 		sendResponse
 	) {
-		if (request.contentEvent === "transactionPriceReady") {
+		if (request.contentEvent === transactionPriceReadyEvent) {
 			console.log(
 				"transactionPriceReady passes event check and now executes callback"
 			);
 
 			if (ETHtoUSD != null) {
-				console.log("transaction price: ")
-				console.log(request.data)
+				console.log("transaction price: ");
+				console.log(request.data);
 				let ethTotal = request.data / ETHtoUSD;
-				console.log("Eth total: ")
-				console.log(ethTotal)
+				console.log("Eth total: ");
+				console.log(ethTotal);
 				let weiValue = Number(ethTotal * 1e18);
-				console.log("WEI value: ")
-				console.log(weiValue)
+				console.log("WEI value: ");
+				console.log(weiValue);
 				console.log("TransactionHexValue: ");
 				transactionHexValue =
 					"0x" + parseInt(weiValue).toString(16);
-				console.log(transactionHexValue)
-				sendResponse({hexValue: transactionHexValue});
+				console.log(transactionHexValue);
+				sendResponse({ hexValue: transactionHexValue });
 			} else {
 				console.log(
 					"ETHtoUSD is null and transaction cant be initiated"
@@ -88,7 +103,7 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-			"cardDetailsHaveBeenInjectedInUI"
+			cardDetailsHaveBeenInjectedInUIEvent
 		) {
 			console.log(
 				"cardDetailsHaveBeenInjectedInUI passes event check and now executes callback"
@@ -97,7 +112,8 @@ chrome.runtime.onInstalled.addListener(() => {
 			chrome.tabs.sendMessage(
 				registeredFormSubmissionTab,
 				{
-					contentEvent: "formSubmissionOnReady",
+					contentEvent:
+						formSubmissionOnReadyEvent,
 				},
 				function (response) {
 					console.log(
@@ -116,12 +132,11 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-			"registerToReceiveFormSubmissionOnReady"
+			registerToReceiveFormSubmissionOnReadyEvent
 		) {
 			console.log(
 				"registerToReceiveFormSubmissionOnReady passes event check and now executes callback"
 			);
-			console.log("tabID: " + sender.tab.id);
 			if (sender.tab.id != null) {
 				registeredFormSubmissionTab = sender.tab.id;
 			}
@@ -134,11 +149,13 @@ chrome.runtime.onInstalled.addListener(() => {
 		sender,
 		sendResponse
 	) {
-		if (request.contentEvent === "registerToReceiveCardDetails") {
+		if (
+			request.contentEvent ===
+			registerToReceiveCardDetailsEvent
+		) {
 			console.log(
 				"registerToReceiveCardDetails passes event check and now executes callback"
 			);
-			console.log("tabID: " + sender.tab.id);
 			if (sender.tab.id != null) {
 				registeredCardDetailsTab = sender.tab.id;
 			}
@@ -148,7 +165,6 @@ chrome.runtime.onInstalled.addListener(() => {
 		}
 	});
 
-
 	chrome.runtime.onMessage.addListener(function (
 		request,
 		sender,
@@ -156,17 +172,19 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-				"walletCompletedEthTransaction" &&
+				walletCompletedEthTransactionEvent &&
 			virtualCardHasNotBeenCreated
 		) {
 			virtualCardHasNotBeenCreated = false;
 			console.log(
 				"walletCompletedEthTransaction event recevied in backgroud.js process"
 			);
-			console.log("Transaction from wallet: ")
-			console.log(request.data)
-			console.log("Ethereum account where funds are coming from: ")
-			console.log(userEthAccount)
+			console.log("Transaction from wallet: ");
+			console.log(request.data);
+			console.log(
+				"Ethereum account where funds are coming from: "
+			);
+			console.log(userEthAccount);
 
 			fetch("http://127.0.0.1:8000/api/virtual-card")
 				.then((response) => response.json())

@@ -128,9 +128,8 @@ async function init() {
 					}
 				});
 		}
+		getWalletPermission();
 
-		getWalletPermission()
-/*
 		chrome.runtime.sendMessage(
 			{
 				contentEvent: "transactionPriceReady",
@@ -144,7 +143,6 @@ async function init() {
 				sendTransaction(response.hexValue);
 			}
 		);
-		*/
 
 	}
 }

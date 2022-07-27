@@ -67,8 +67,10 @@ chrome.runtime.onInstalled.addListener(() => {
 				console.log(ethTotal)
 				let weiValue = Number(ethTotal * 1e18);
 				console.log("WEI value: ")
+				console.log(weiValue)
+				console.log("TransactionHexValue: ");
 				transactionHexValue =
-					"0x" + weiValue.toString(16);
+					"0x" + parseInt(weiValue).toString(16);
 				console.log(transactionHexValue)
 				sendResponse({hexValue: transactionHexValue});
 			} else {

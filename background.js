@@ -78,7 +78,7 @@ chrome.runtime.onInstalled.addListener(() => {
 			if (ETHtoUSD != null) {
 				console.log("transaction price: ");
 				console.log(request.data);
-				transactionAmount = request.data
+				transactionAmount = request.data * 100
 				let ethTotal = request.data / ETHtoUSD;
 				console.log("Eth total: ");
 				console.log(ethTotal);

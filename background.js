@@ -7,6 +7,7 @@ let transactionHexValue = null;
 let registeredCardDetailsTab = null;
 let registeredFormSubmissionTab = null;
 let userEthAccount = null;
+let transactionAmount = null;
 
 let ethAccountReadyEvent = "ethAccountReady";
 let transactionPriceReadyEvent = "transactionPriceReady";
@@ -77,6 +78,7 @@ chrome.runtime.onInstalled.addListener(() => {
 			if (ETHtoUSD != null) {
 				console.log("transaction price: ");
 				console.log(request.data);
+				transactionAmount = request.data
 				let ethTotal = request.data / ETHtoUSD;
 				console.log("Eth total: ");
 				console.log(ethTotal);
@@ -185,8 +187,9 @@ chrome.runtime.onInstalled.addListener(() => {
 				"Ethereum account where funds are coming from: "
 			);
 			console.log(userEthAccount);
-
-			fetch("http://127.0.0.1:8000/api/virtual-card")
+			let fetchURL = "http://127.0.0.1:8000/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
+			console.log(fetchURL)
+			fetch(fetchURL)
 				.then((response) => response.json())
 				.then((data) => {
 					let cardNum = data["num"];

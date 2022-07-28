@@ -24,7 +24,7 @@ async function init() {
 				);
 			}
 		);
-		
+
 		chrome.runtime.onMessage.addListener(function (
 			request,
 			sender,
@@ -49,7 +49,6 @@ async function init() {
 		);
 		transactionPrice = paymentDuePrice / 100;
 
-
 		const provider = createMetaMaskProvider();
 		let currentAccount = null;
 
@@ -57,7 +56,7 @@ async function init() {
 			console.log(
 				"getVirtualCard function callback was executed after transaction sent in content script"
 			);
-			console.log(transaction)
+			console.log(transaction);
 
 			chrome.runtime.sendMessage(
 				{
@@ -96,13 +95,11 @@ async function init() {
 				});
 		}
 
-
 		function getWalletPermission() {
 			provider.request({
 				method: "eth_requestAccounts",
 			})
 				.then((response) => {
-
 					chrome.runtime.sendMessage(
 						{
 							contentEvent:
@@ -110,11 +107,13 @@ async function init() {
 							data: response[0],
 						},
 						function (res) {
-							console.log("ethAccountReady message sent callback executed");
+							console.log(
+								"ethAccountReady message sent callback executed"
+							);
 						}
 					);
-					console.log("The account number is: ")
-					console.log(response[0])
+					console.log("The account number is: ");
+					console.log(response[0]);
 				})
 				.catch((err) => {
 					if (err.code === 4001) {
@@ -141,10 +140,28 @@ async function init() {
 					"transactionPriceReady callback is executed"
 				);
 
+				transactionHexValue = response.hexValue;
+				/*
 				sendTransaction(response.hexValue);
+				*/
 			}
 		);
 
+		let h = document.getElementById("order-summary");
+
+		// create a new div element
+		const newButton = document.createElement("button");
+		newButton.innerHTML = "PAY WITH CRYPTO";
+		newButton.style.width = "200px";
+		newButton.style.height = "100px";
+		newButton.style.background = "black";
+		newButton.style.color = "white";
+		newButton.addEventListener("click", function () {
+			console.log(transactionHexValue);
+			sendTransaction(transactionHexValue);
+			console.log("THE BUTTON WAS CLICKED");
+		});
+		h.insertBefore(newButton, h.lastChild);
 	}
 }
 

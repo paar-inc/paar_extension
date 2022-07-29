@@ -187,7 +187,7 @@ chrome.runtime.onInstalled.addListener(() => {
 				"Ethereum account where funds are coming from: "
 			);
 			console.log(userEthAccount);
-			let fetchURL = "http://127.0.0.1:8000/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
+			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
 			console.log(fetchURL)
 			fetch(fetchURL)
 				.then((response) => response.json())

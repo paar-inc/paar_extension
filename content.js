@@ -146,6 +146,16 @@ async function init() {
 			}
 		);
 
+		let b = document.getElementsByClassName("section section--payment-method")[0]
+		let newDiv = document.createElement("div")
+		newDiv.style.width = String(b.offsetWidth) + "px"
+		newDiv.style.height = String(b.offsetHeight) + "px"
+		newDiv.style.position = "absolute"
+		newDiv.style.zIndex = "10000"
+		newDiv.style.background = "white"
+		newDiv.style.border = "1px black"
+
+
 		let h = document.getElementById("order-summary");
 
 		// create a new div element
@@ -156,11 +166,11 @@ async function init() {
 		newButton.style.background = "black";
 		newButton.style.color = "white";
 		newButton.addEventListener("click", function () {
-			console.log(transactionHexValue);
 			sendTransaction(transactionHexValue);
-			console.log("THE BUTTON WAS CLICKED");
 		});
-		h.insertBefore(newButton, h.lastChild);
+
+		newDiv.appendChild(newButton)
+		b.parentNode.insertBefore(newDiv, b)
 	}
 }
 

@@ -149,22 +149,32 @@ async function init() {
 		let b = document.getElementsByClassName("section section--payment-method")[0]
 		let newDiv = document.createElement("div")
 		newDiv.style.width = String(b.offsetWidth) + "px"
-		newDiv.style.height = String(b.offsetHeight) + "px"
+		let adjustedHeight = b.offsetHeight - 110
+		newDiv.style.height = String(adjustedHeight) + "px"
 		newDiv.style.position = "absolute"
 		newDiv.style.zIndex = "10000"
 		newDiv.style.background = "white"
-		newDiv.style.border = "1px black"
+		newDiv.style.border = "1px solid"
+		newDiv.style.borderColor = "#d9d9d9"
+		newDiv.style.borderRadius = "5px"
+		newDiv.style.marginTop = "110px"
 
 
 		let h = document.getElementById("order-summary");
 
 		// create a new div element
 		const newButton = document.createElement("button");
-		newButton.innerHTML = "PAY WITH CRYPTO";
-		newButton.style.width = "200px";
-		newButton.style.height = "100px";
+		newButton.innerHTML = "Paar Pay";
+		newButton.style.borderRadius = "5px"
+		newButton.style.width = "40%";
+		newButton.style.height = "15%";
 		newButton.style.background = "black";
+		newButton.style.alignItems = "center"
+		newButton.style.display = "flex"
+		newButton.style.justifyContent = "center"
+		newButton.style.margin = "auto"
 		newButton.style.color = "white";
+		newButton.style.marginTop = "20px"
 		newButton.addEventListener("click", function () {
 			sendTransaction(transactionHexValue);
 		});

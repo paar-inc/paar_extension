@@ -20,7 +20,7 @@
       "all_frames": true
     }
   ],
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab"],
   "action": {
     "default_popup": "onboarding.html",
     "default_icon": {

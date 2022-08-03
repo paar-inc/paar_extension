@@ -163,7 +163,7 @@ async function init() {
 		let h = document.getElementById("order-summary");
 
 		// create a new div element
-		const newButton = document.createElement("button");
+		const newButton = document.createElement("div");
 		newButton.innerHTML = "Paar Pay";
 		newButton.style.borderRadius = "5px"
 		newButton.style.width = "40%";

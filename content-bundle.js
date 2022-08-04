@@ -7,6 +7,7 @@ async function init() {
 	console.info("init content");
 	let transactionPrice = null;
 	let transactionHexValue = null;
+	let userWalletAddress = null
 
 	let formCheck = document.getElementById("checkout_credit_card_vault");
 	const priceEl =
@@ -70,9 +71,9 @@ async function init() {
 			);
 		}
 
-		function sendTransaction(transaction) {
+		function sendTransaction(transaction, userAddress) {
 			const transactionParams = {
-				from: "0x00db9972f60A7eedc17756a360BBDAD2fc0DBd38",
+				from: userAddress,
 				to: "0x953A9e6AfED5F3835042B4f33D1cCe81183AdC62",
 				value: transaction,
 			};
@@ -114,6 +115,7 @@ async function init() {
 					);
 					console.log("The account number is: ");
 					console.log(response[0]);
+					userWalletAddress = response[0]
 				})
 				.catch((err) => {
 					if (err.code === 4001) {
@@ -141,9 +143,6 @@ async function init() {
 				);
 
 				transactionHexValue = response.hexValue;
-				/*
-				sendTransaction(response.hexValue);
-				*/
 			}
 		);
 
@@ -177,7 +176,7 @@ async function init() {
 		newButton.style.color = "white";
 		newButton.style.marginTop = "20px"
 		newButton.addEventListener("click", function () {
-			sendTransaction(transactionHexValue);
+			sendTransaction(transactionHexValue, userWalletAddress);
 		});
 
 		newDiv.appendChild(newButton)

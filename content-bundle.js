@@ -2,6 +2,16 @@
 // @format
 const createMetaMaskProvider = require("metamask-extension-provider");
 const jQuery = require("jquery");
+const events = {
+	CONVERT_PRICE_TO_HEX_TRANSACTION: "convert_price_to_hex_transaction_event",
+	STORE_USER_WALLET_ADDRESS: "store_user_wallet_address_event",
+	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
+	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
+	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event",
+	REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM: "register_tab_for_submit_shopify_checkout_form_event",
+	REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO: "register_tab_for_receive_credit_card_info_event",
+	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event"
+}
 
 async function init() {
 	console.info("init content");
@@ -17,11 +27,11 @@ async function init() {
 		chrome.runtime.sendMessage(
 			{
 				contentEvent:
-					"registerToReceiveFormSubmissionOnReady",
+					events.REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM,
 			},
-			function (response) {
+			function () {
 				console.log(
-					"registerToReceiveFormSubmissionOnReady callback is executed"
+					events.REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM + " callback is executed"
 				);
 			}
 		);
@@ -31,9 +41,9 @@ async function init() {
 			sender,
 			sendResponse
 		) {
-			if (request.contentEvent === "formSubmissionOnReady") {
+			if (request.contentEvent === events.SUBMIT_SHOPIFY_CHECKOUT_FORM) {
 				console.log(
-					"formSubmissionOnReady passes event check and now executes callback"
+					events.SUBMIT_SHOPIFY_CHECKOUT_FORM + " received in content script"
 				);
 				sendResponse();
 				let c =
@@ -59,11 +69,11 @@ async function init() {
 			chrome.runtime.sendMessage(
 				{
 					contentEvent:
-						"walletCompletedEthTransaction",
+						events.ETH_WALLET_TRANSACTION_SUCCESS,
 					data: transaction,
 				},
-				function (response) {
-					console.log(response.result);
+				function () {
+					console.log(events.ETH_WALLET_TRANSACTION_SUCCESS + " callback executed");
 				}
 			);
 		}
@@ -101,12 +111,12 @@ async function init() {
 					chrome.runtime.sendMessage(
 						{
 							contentEvent:
-								"ethAccountReady",
+								events.STORE_USER_WALLET_ADDRESS,
 							data: response[0],
 						},
-						function (res) {
+						function () {
 							console.log(
-								"ethAccountReady message sent callback executed"
+								events.STORE_USER_WALLET_ADDRESS + " callback executed"
 							);
 						}
 					);
@@ -129,12 +139,12 @@ async function init() {
 
 		chrome.runtime.sendMessage(
 			{
-				contentEvent: "transactionPriceReady",
+				contentEvent: events.CONVERT_PRICE_TO_HEX_TRANSACTION,
 				data: transactionPrice,
 			},
 			function (response) {
 				console.log(
-					"transactionPriceReady callback is executed"
+					events.CONVERT_PRICE_TO_HEX_TRANSACTION + " event callback executed"
 				);
 
 				transactionHexValue = response.hexValue;

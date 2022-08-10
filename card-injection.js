@@ -1,12 +1,22 @@
 // @format
 const jQuery = require("jquery");
+const events = {
+	CONVERT_PRICE_TO_HEX_TRANSACTION: "convert_price_to_hex_transaction_event",
+	STORE_USER_WALLET_ADDRESS: "store_user_wallet_address_event",
+	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
+	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
+	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event",
+	REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM: "register_tab_for_submit_shopify_checkout_form_event",
+	REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO: "register_tab_for_receive_credit_card_info_event",
+	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event"
+}
 
 async function init() {
 	chrome.runtime.sendMessage(
-		{ contentEvent: "registerToReceiveCardDetails" },
-		function (response) {
+		{ contentEvent: events.REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO },
+		function () {
 			console.log(
-				"registerToReceiveCardDetails callback executed"
+				events.REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO + " callback executed"
 			);
 		}
 	);
@@ -16,9 +26,9 @@ async function init() {
 		sender,
 		sendResponse
 	) {
-		if (request.contentEvent === "cardDetailsReceived") {
+		if (request.contentEvent === events.RECEIVE_CREDIT_CARD_INFO) {
 			console.log(
-				"cardDetailsReceived passes event check and now executes callback"
+				events.RECEIVE_CREDIT_CARD_INFO + " received in card-injection.js"
 			);
 			let ccValue = request.cardDetails;
 			jQuery('form input[name="number"]').val(ccValue.num);
@@ -32,11 +42,11 @@ async function init() {
 			chrome.runtime.sendMessage(
 				{
 					contentEvent:
-						"cardDetailsHaveBeenInjectedInUI",
+						events.CREDIT_CARD_INFO_IS_INJECTED,
 				},
-				function (response) {
+				function () {
 					console.log(
-						"cardDetailsHaveBeenInjectedInUI callback executed"
+						events.CREDIT_CARD_INFO_IS_INJECTED + " callback executed"
 					);
 				}
 			);

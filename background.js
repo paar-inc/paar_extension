@@ -1,5 +1,15 @@
 // @format
 // background.js
+const events = {
+	CONVERT_PRICE_TO_HEX_TRANSACTION: "convert_price_to_hex_transaction_event",
+	STORE_USER_WALLET_ADDRESS: "store_user_wallet_address_event",
+	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
+	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
+	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event",
+	REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM: "register_tab_for_submit_shopify_checkout_form_event",
+	REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO: "register_tab_for_receive_credit_card_info_event",
+	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event"
+}
 
 let virtualCardHasNotBeenCreated = true;
 let ETHtoUSD = null;
@@ -9,14 +19,6 @@ let registeredFormSubmissionTab = null;
 let userEthAccount = null;
 let transactionAmount = null;
 
-let ethAccountReadyEvent = "ethAccountReady";
-let transactionPriceReadyEvent = "transactionPriceReady";
-let cardDetailsHaveBeenInjectedInUIEvent = "cardDetailsHaveBeenInjectedInUI";
-let formSubmissionOnReadyEvent = "formSubmissionOnReady";
-let registerToReceiveFormSubmissionOnReadyEvent =
-	"registerToReceiveFormSubmissionOnReady";
-let registerToReceiveCardDetailsEvent = "registerToReceiveCardDetails";
-let walletCompletedEthTransactionEvent = "walletCompletedEthTransaction";
 
 console.log("RUNNING BACKGROUND JS");
 chrome.runtime.onInstalled.addListener(() => {
@@ -52,14 +54,15 @@ chrome.runtime.onInstalled.addListener(() => {
 		sender,
 		sendResponse
 	) {
-		if (request.contentEvent === ethAccountReadyEvent) {
+		if (request.contentEvent === events.STORE_USER_WALLET_ADDRESS) {
 			console.log(
-				"ethAccountReady passes event check and now executes callback"
+				events.STORE_USER_WALLET_ADDRESS + " received in background.js"
 			);
 
 			if (userEthAccount === null) {
 				userEthAccount = request.data;
 			}
+			sendResponse()
 		}
 	});
 
@@ -68,9 +71,9 @@ chrome.runtime.onInstalled.addListener(() => {
 		sender,
 		sendResponse
 	) {
-		if (request.contentEvent === transactionPriceReadyEvent) {
+		if (request.contentEvent === events.CONVERT_PRICE_TO_HEX_TRANSACTION) {
 			console.log(
-				"transactionPriceReady passes event check and now executes callback"
+				 events.CONVERT_PRICE_TO_HEX_TRANSACTION + " received in background.js"
 			);
 
 			if (ETHtoUSD != null) {
@@ -95,21 +98,21 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-			cardDetailsHaveBeenInjectedInUIEvent
+			events.CREDIT_CARD_INFO_IS_INJECTED
 		) {
 			console.log(
-				"cardDetailsHaveBeenInjectedInUI passes event check and now executes callback"
+				events.CREDIT_CARD_INFO_IS_INJECTED + " executed by background.js"
 			);
 
 			chrome.tabs.sendMessage(
 				registeredFormSubmissionTab,
 				{
 					contentEvent:
-						formSubmissionOnReadyEvent,
+						events.SUBMIT_SHOPIFY_CHECKOUT_FORM,
 				},
 				function (response) {
 					console.log(
-						"formSubmissionOnReady calback has been executed"
+						events.SUBMIT_SHOPIFY_CHECKOUT_FORM + " calback has been executed"
 					);
 				}
 			);
@@ -124,10 +127,10 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-			registerToReceiveFormSubmissionOnReadyEvent
+			events.REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM
 		) {
 			console.log(
-				"registerToReceiveFormSubmissionOnReady passes event check and now executes callback"
+				events.REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM + " exectued in background.js"
 			);
 			if (sender.tab.id != null) {
 				registeredFormSubmissionTab = sender.tab.id;
@@ -143,17 +146,15 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-			registerToReceiveCardDetailsEvent
+			events.REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO
 		) {
 			console.log(
-				"registerToReceiveCardDetails passes event check and now executes callback"
+				events.REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO + " exectued in background.js"
 			);
 			if (sender.tab.id != null) {
 				registeredCardDetailsTab = sender.tab.id;
 			}
-			sendResponse({
-				result: "registerToReceiveCardDetails response",
-			});
+			sendResponse();
 		}
 	});
 
@@ -164,12 +165,12 @@ chrome.runtime.onInstalled.addListener(() => {
 	) {
 		if (
 			request.contentEvent ===
-				walletCompletedEthTransactionEvent &&
+				events.ETH_WALLET_TRANSACTION_SUCCESS &&
 			virtualCardHasNotBeenCreated
 		) {
 			virtualCardHasNotBeenCreated = false;
 			console.log(
-				"walletCompletedEthTransaction event recevied in backgroud.js process"
+				events.ETH_WALLET_TRANSACTION_SUCCESS + " exectued in background.js"
 			);
 
 			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
@@ -189,19 +190,17 @@ chrome.runtime.onInstalled.addListener(() => {
 						registeredCardDetailsTab,
 						{
 							contentEvent:
-								"cardDetailsReceived",
+								events.RECEIVE_CREDIT_CARD_INFO,
 							cardDetails: details,
 						},
-						function (response) {
+						function () {
 							console.log(
-								"sendMessage to registerdCardDeatilsTab callback was executed, it WORKEDDDDDD!"
+								events.RECEIVE_CREDIT_CARD_INFO + " callback executed"
 							);
 						}
 					);
 				});
-			sendResponse({
-				result: "walletCompletedEthTransaction event callback executed",
-			});
+			sendResponse();
 		}
 	});
 });

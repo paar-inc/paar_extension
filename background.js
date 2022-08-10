@@ -28,8 +28,6 @@ chrome.runtime.onInstalled.addListener(() => {
 	setInterval(() => {
 		let coinbaseURL =
 			"https://api.coinbase.com/v2/exchange-rates?currency=ETH";
-		let etherScanURL =
-			"https://api.etherscan.io/api?module=stats&action=ethprice";
 		fetch(coinbaseURL)
 			.then((response) => response.json())
 			.then((data) => {
@@ -76,19 +74,11 @@ chrome.runtime.onInstalled.addListener(() => {
 			);
 
 			if (ETHtoUSD != null) {
-				console.log("transaction price: ");
-				console.log(request.data);
 				transactionAmount = request.data * 100
 				let ethTotal = request.data / ETHtoUSD;
-				console.log("Eth total: ");
-				console.log(ethTotal);
 				let weiValue = Number(ethTotal * 1e18);
-				console.log("WEI value: ");
-				console.log(weiValue);
-				console.log("TransactionHexValue: ");
 				transactionHexValue =
 					"0x" + parseInt(weiValue).toString(16);
-				console.log(transactionHexValue);
 				sendResponse({ hexValue: transactionHexValue });
 			} else {
 				console.log(
@@ -181,23 +171,15 @@ chrome.runtime.onInstalled.addListener(() => {
 			console.log(
 				"walletCompletedEthTransaction event recevied in backgroud.js process"
 			);
-			console.log("Transaction from wallet: ");
-			console.log(request.data);
-			console.log(
-				"Ethereum account where funds are coming from: "
-			);
-			console.log(userEthAccount);
+
 			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
-			console.log(fetchURL)
 			fetch(fetchURL)
 				.then((response) => response.json())
 				.then((data) => {
 					let cardNum = data["num"];
 					let exp = data["expiration"];
 					let cvv = data["cvv"];
-					console.log("VIRTUAL CARD!!!!!: ");
-					console.log(cardNum);
-					console.log(data);
+
 					let details = {
 						num: cardNum,
 						expiration: exp,

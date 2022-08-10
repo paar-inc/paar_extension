@@ -36,7 +36,6 @@ async function init() {
 					"formSubmissionOnReady passes event check and now executes callback"
 				);
 				sendResponse();
-				console.log("BUTTON CLICKED!!!!!");
 				let c =
 					document.getElementById(
 						"continue_button"
@@ -57,8 +56,6 @@ async function init() {
 			console.log(
 				"getVirtualCard function callback was executed after transaction sent in content script"
 			);
-			console.log(transaction);
-
 			chrome.runtime.sendMessage(
 				{
 					contentEvent:
@@ -113,8 +110,6 @@ async function init() {
 							);
 						}
 					);
-					console.log("The account number is: ");
-					console.log(response[0]);
 					userWalletAddress = response[0]
 				})
 				.catch((err) => {

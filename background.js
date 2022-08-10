@@ -47,7 +47,7 @@ chrome.runtime.onInstalled.addListener(() => {
 					);
 				}
 			});
-	}, 7000);
+	}, 500);
 
 	chrome.runtime.onMessage.addListener(function (
 		request,

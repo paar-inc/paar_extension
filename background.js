@@ -1,22 +1,46 @@
 // @format
 // background.js
 const events = {
-	CONVERT_PRICE_TO_HEX_TRANSACTION: "convert_price_to_hex_transaction_event",
-	STORE_USER_WALLET_ADDRESS: "store_user_wallet_address_event",
-	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
-	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
-	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event",
+	// all of these below must succeed before user can click "pay w/ paar"
 	REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM: "register_tab_for_submit_shopify_checkout_form_event",
 	REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO: "register_tab_for_receive_credit_card_info_event",
-	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event"
+	CONVERT_PRICE_TO_HEX_TRANSACTION: "convert_price_to_hex_transaction_event",
+	STORE_USER_WALLET_ADDRESS: "store_user_wallet_address_event",
+	// all of these below occur after "pay w/ paar" is clicked
+	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event",
+	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
+	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
+	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event"
 }
 
-let virtualCardHasNotBeenCreated = true;
+// add "transactions" where sender.tab.id is key
+// let example_transaction = {
+// 	createdAt: "2022-03-01-15-12345933",
+// 	walletAddress: "0x38uurhvdsjahjkheih9fe8whf",
+// 	usdAmount: 234549,
+// 	transactionHexValue: "0x3hjdh",
+// 	email: "andrew@GMAIL.COM",
+// 	successfulTransactionAddresss: "0x3u2u3423u482342u43243423422",
+// 	brexCardId: 123421583243,
+// 	current_state: "CREDIT_CARD_INFO_IS_INJECTED"
+// }
+// let example_transactions = {
+// 	241900: example_transaction
+// }
+
+// extension level state
 let ETHtoUSD = null;
+let userEthAccount = null;
+let transactions = {}
+
+// transaction level state
+// todo remove all reference to these by updating code so every
+// event that previously updated one of the background scoped variables
+// below 
+let virtualCardHasNotBeenCreated = true;
 let transactionHexValue = null;
 let registeredCardDetailsTab = null;
 let registeredFormSubmissionTab = null;
-let userEthAccount = null;
 let transactionAmount = null;
 
 
@@ -55,9 +79,21 @@ chrome.runtime.onInstalled.addListener(() => {
 		sendResponse
 	) {
 		if (request.contentEvent === events.STORE_USER_WALLET_ADDRESS) {
-			console.log(
-				events.STORE_USER_WALLET_ADDRESS + " received in background.js"
-			);
+			currentTransaction = transactions[sender.tab.id]
+			if (currentTransaction != null) {
+				currentTransaction["walletAddress"] = request.data
+				currentTransaction["currentState"] = events.STORE_USER_WALLET_ADDRESS
+			} else {
+				const currentDate = new Date();
+				const currentTimestamp = currentDate.getTime();
+				currentTransaction = {
+					createdAt: currentTimestamp,
+					walletAddress: request.data,
+					currentState: events.STORE_USER_WALLET_ADDRESS
+				}
+			}
+			transactions[sender.tab.id] = currentTransaction
+			console.log(transactions[sender.tab.id])
 
 			if (userEthAccount === null) {
 				userEthAccount = request.data;
@@ -72,16 +108,32 @@ chrome.runtime.onInstalled.addListener(() => {
 		sendResponse
 	) {
 		if (request.contentEvent === events.CONVERT_PRICE_TO_HEX_TRANSACTION) {
-			console.log(
-				 events.CONVERT_PRICE_TO_HEX_TRANSACTION + " received in background.js"
-			);
-
 			if (ETHtoUSD != null) {
 				transactionAmount = request.data * 100
 				let ethTotal = request.data / ETHtoUSD;
 				let weiValue = Number(ethTotal * 1e18);
 				transactionHexValue =
 					"0x" + parseInt(weiValue).toString(16);
+
+				currentTransaction = transactions[sender.tab.id]
+				if (currentTransaction != null) {
+					currentTransaction["usdAmount"] = transactionAmount
+					currentTransaction["transactionHexValue"] = transactionHexValue
+					currentTransaction["email"] = "andrew@GMAIL.COM"
+					currentTransaction["currentState"] = events.CONVERT_PRICE_TO_HEX_TRANSACTION
+				} else {
+					const currentDate = new Date();
+					const currentTimestamp = currentDate.getTime();
+					currentTransaction = {
+						createdAt: currentTimestamp,
+						usdAmount: transactionAmount,
+						transactionHexValue: transactionHexValue,
+						email: "andrew@GMAIL.COM",
+						currentState: events.CONVERT_PRICE_TO_HEX_TRANSACTION
+					}
+				}
+				transactions[sender.tab.id] = currentTransaction
+				console.log(transactions[sender.tab.id])
 				sendResponse({ hexValue: transactionHexValue });
 			} else {
 				console.log(
@@ -100,9 +152,15 @@ chrome.runtime.onInstalled.addListener(() => {
 			request.contentEvent ===
 			events.CREDIT_CARD_INFO_IS_INJECTED
 		) {
-			console.log(
-				events.CREDIT_CARD_INFO_IS_INJECTED + " executed by background.js"
-			);
+
+			currentTransaction = transactions[sender.tab.id]
+			if (currentTransaction != null) {
+				currentTransaction["currentState"] = events.CREDIT_CARD_INFO_IS_INJECTED
+			} else {
+				// ERROR todo acm
+			}
+			transactions[sender.tab.id] = currentTransaction
+			console.log(transactions[sender.tab.id])
 
 			chrome.tabs.sendMessage(
 				registeredFormSubmissionTab,
@@ -111,9 +169,14 @@ chrome.runtime.onInstalled.addListener(() => {
 						events.SUBMIT_SHOPIFY_CHECKOUT_FORM,
 				},
 				function (response) {
-					console.log(
-						events.SUBMIT_SHOPIFY_CHECKOUT_FORM + " calback has been executed"
-					);
+					currentTransaction = transactions[sender.tab.id]
+					if (currentTransaction != null) {
+						currentTransaction["currentState"] = events.SUBMIT_SHOPIFY_CHECKOUT_FORM
+					} else {
+						// ERROR todo acm
+					}
+					transactions[sender.tab.id] = currentTransaction
+					console.log(transactions[sender.tab.id])
 				}
 			);
 			sendResponse();
@@ -169,10 +232,17 @@ chrome.runtime.onInstalled.addListener(() => {
 			virtualCardHasNotBeenCreated
 		) {
 			virtualCardHasNotBeenCreated = false;
-			console.log(
-				events.ETH_WALLET_TRANSACTION_SUCCESS + " exectued in background.js"
-			);
 
+			currentTransaction = transactions[sender.tab.id]
+			if (currentTransaction != null) {
+				currentTransaction["successfulTransactionAddress"] = request.data
+				currentTransaction["currentState"] = events.ETH_WALLET_TRANSACTION_SUCCESS
+			} else {
+				// ERROR todo acm
+			}
+			transactions[sender.tab.id] = currentTransaction
+			console.log(transactions[sender.tab.id])
+			
 			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
 			fetch(fetchURL)
 				.then((response) => response.json())
@@ -186,6 +256,7 @@ chrome.runtime.onInstalled.addListener(() => {
 						expiration: exp,
 						cv: cvv,
 					};
+					
 					chrome.tabs.sendMessage(
 						registeredCardDetailsTab,
 						{
@@ -193,12 +264,20 @@ chrome.runtime.onInstalled.addListener(() => {
 								events.RECEIVE_CREDIT_CARD_INFO,
 							cardDetails: details,
 						},
-						function () {
-							console.log(
-								events.RECEIVE_CREDIT_CARD_INFO + " callback executed"
-							);
-						}
+						function () {}
 					);
+
+					currentTransaction = transactions[sender.tab.id]
+					if (currentTransaction != null) {
+						// todo acm --- update this to actual brex id.. django update required
+						currentTransaction["brexCardId"] = data["expiration"]
+						currentTransaction["currentState"] = events.RECEIVE_CREDIT_CARD_INFO
+					} else {
+						// ERROR todo acm
+					}
+					transactions[sender.tab.id] = currentTransaction
+					console.log(transactions[sender.tab.id])
+	
 				});
 			sendResponse();
 		}

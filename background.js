@@ -10,7 +10,10 @@ const events = {
 	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event",
 	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
 	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
-	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event"
+	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event",
+	CONVERT_PRICE_TO_HEX_TRANSACTION_FAILURE: "convert_price_to_hex_transaction_failure_event",
+	GET_ETH_TO_USD_REQUEST_FAILURE: "get_eth_to_usd_request_failure_event",
+	GET_VIRTUAL_CARD_REQUEST_FAILURE: "get_virtual_card_request_failure_event"
 }
 
 // add "transactions" where sender.tab.id is key
@@ -30,7 +33,6 @@ const events = {
 
 // extension level state
 let ETHtoUSD = null;
-let userEthAccount = null;
 let transactions = {}
 
 // transaction level state
@@ -79,7 +81,11 @@ chrome.runtime.onInstalled.addListener(() => {
 						}
 					);
 				}
+			})
+			.catch((err) => {
+				logTransaction(events.GET_ETH_TO_USD_REQUEST_FAILURE, {failureCode: String(err.code)})
 			});
+			
 	}, 500);
 
 	chrome.runtime.onMessage.addListener(function (
@@ -103,10 +109,6 @@ chrome.runtime.onInstalled.addListener(() => {
 			}
 			transactions[sender.tab.id] = currentTransaction
 			logTransaction(events.STORE_USER_WALLET_ADDRESS, currentTransaction)
-
-			if (userEthAccount === null) {
-				userEthAccount = request.data;
-			}
 			sendResponse()
 		}
 	});
@@ -117,8 +119,8 @@ chrome.runtime.onInstalled.addListener(() => {
 		sendResponse
 	) {
 		if (request.contentEvent === events.CONVERT_PRICE_TO_HEX_TRANSACTION) {
+			transactionAmount = request.data * 100
 			if (ETHtoUSD != null) {
-				transactionAmount = request.data * 100
 				let ethTotal = request.data / ETHtoUSD;
 				let weiValue = Number(ethTotal * 1e18);
 				transactionHexValue =
@@ -145,9 +147,24 @@ chrome.runtime.onInstalled.addListener(() => {
 				logTransaction(events.CONVERT_PRICE_TO_HEX_TRANSACTION, currentTransaction)
 				sendResponse({ hexValue: transactionHexValue });
 			} else {
-				console.log(
-					"ETHtoUSD is null and transaction cant be initiated"
-				);
+				currentTransaction = transactions[sender.tab.id]
+				if (currentTransaction != null) {
+					currentTransaction["usdAmount"] = transactionAmount
+					currentTransaction["email"] = "andrew@GMAIL.COM"
+					currentTransaction["currentState"] = events.CONVERT_PRICE_TO_HEX_TRANSACTION_FAILURE
+				} else {
+					const currentDate = new Date();
+					const currentTimestamp = currentDate.getTime();
+					currentTransaction = {
+						createdAt: currentTimestamp,
+						usdAmount: transactionAmount,
+						email: "andrew@GMAIL.COM",
+						currentState: events.events.CONVERT_PRICE_TO_HEX_TRANSACTION_FAILURE
+					}
+				}
+
+				logTransaction(events.CONVERT_PRICE_TO_HEX_TRANSACTION_FAILURE, currentTransaction)
+				transactions[sender.tab.id] = currentTransaction
 			}
 		}
 	});
@@ -252,7 +269,7 @@ chrome.runtime.onInstalled.addListener(() => {
 			transactions[sender.tab.id] = currentTransaction
 			logTransaction(events.ETH_WALLET_TRANSACTION_SUCCESS, currentTransaction)
 			
-			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
+			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + currentTransaction.successfulTransactionAddress + "&wallet=" + currentTransaction.walletAddress + "&transaction_amount=" + currentTransaction.usdAmount
 			fetch(fetchURL)
 				.then((response) => response.json())
 				.then((data) => {
@@ -286,6 +303,9 @@ chrome.runtime.onInstalled.addListener(() => {
 					}
 					transactions[sender.tab.id] = currentTransaction
 					logTransaction(events.RECEIVE_CREDIT_CARD_INFO, currentTransaction)
+				})
+				.catch((err) => {
+					logTransaction(events.GET_VIRTUAL_CARD_REQUEST_FAILURE, {failureCode: String(err.code)})
 				});
 			sendResponse();
 		}

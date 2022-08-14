@@ -36,6 +36,9 @@ async function init() {
 			let transactionPrice = null;
 			let transactionHexValue = null;
 			let userWalletAddress = null
+			let newButton = null;
+			let loader = null;
+			let newDiv = null;
 
 			let formCheck = document.getElementById("checkout_credit_card_vault");
 			const priceEl =
@@ -97,6 +100,8 @@ async function init() {
 					})
 						.then(getVirtualCard)
 						.catch((err) => {
+							newDiv.removeChild(loader)
+							newDiv.appendChild(newButton)
 							logTransaction(events.ETH_WALLET_TRANSACTION_FAILURE, {failureCode: String(err.code)})
 						});
 				}
@@ -131,11 +136,13 @@ async function init() {
 					},
 					function (response) {
 						transactionHexValue = response.hexValue;
+						newDiv.removeChild(loader)
+						newDiv.appendChild(newButton)
 					}
 				);
 
 				let b = document.getElementsByClassName("section section--payment-method")[0]
-				let newDiv = document.createElement("div")
+				newDiv = document.createElement("div")
 				newDiv.style.width = String(b.offsetWidth) + "px"
 				let adjustedHeight = b.offsetHeight - 110
 				newDiv.style.height = String(adjustedHeight) + "px"
@@ -147,11 +154,10 @@ async function init() {
 				newDiv.style.borderRadius = "5px"
 				newDiv.style.marginTop = "110px"
 
-
 				let h = document.getElementById("order-summary");
 
 				// create a new div element
-				const newButton = document.createElement("div");
+				newButton = document.createElement("div");
 				newButton.innerHTML = "Paar Pay";
 				newButton.style.borderRadius = "5px"
 				newButton.style.width = "40%";
@@ -163,11 +169,17 @@ async function init() {
 				newButton.style.margin = "auto"
 				newButton.style.color = "white";
 				newButton.style.marginTop = "20px"
+				loader = document.createElement("div")
+				loader.className = "loader"
+				
 				newButton.addEventListener("click", function () {
+					newDiv.removeChild(newButton)
+					newDiv.appendChild(loader)
 					sendTransaction(transactionHexValue, userWalletAddress);
 				});
 
-				newDiv.appendChild(newButton)
+
+				newDiv.appendChild(loader)
 				b.parentNode.insertBefore(newDiv, b)
 			}
 	};

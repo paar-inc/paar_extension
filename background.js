@@ -272,7 +272,7 @@ chrome.runtime.onInstalled.addListener(() => {
 			//todo acm flip to prod before zippping
 			let prodUrl = "https://paar-server.herokuapp.com"
 			let testUrl = "http://127.0.0.1:8000"
-			let fetchURL = testUrl + "/api/virtual-card" + "?" + "transaction=" + currentTransaction.successfulTransactionAddress + "&wallet=" + currentTransaction.walletAddress + "&email=" + currentTransaction.email
+			let fetchURL = prodUrl + "/api/virtual-card" + "?" + "transaction=" + currentTransaction.successfulTransactionAddress + "&wallet=" + currentTransaction.walletAddress + "&email=" + currentTransaction.email
 			fetch(fetchURL)
 				.then((response) => response.json())
 				.then((data) => {

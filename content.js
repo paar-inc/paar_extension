@@ -3,13 +3,27 @@ const createMetaMaskProvider = require("metamask-extension-provider");
 const jQuery = require("jquery");
 const events = {
 	CONVERT_PRICE_TO_HEX_TRANSACTION: "convert_price_to_hex_transaction_event",
+	REQUEST_USER_WALLET_PERMISSION: "request_user_wallet_permission_event",
+	REQUEST_USER_WALLET_PERMISSION_SUCCESS: "request_user_wallet_permission_success_event",
+	REQUEST_USER_WALLET_PERMISSION_FAILURE: "request_user_wallet_permission_failure_event",
+
 	STORE_USER_WALLET_ADDRESS: "store_user_wallet_address_event",
 	CREDIT_CARD_INFO_IS_INJECTED: "credit_card_info_is_injected_event",
 	SUBMIT_SHOPIFY_CHECKOUT_FORM: "submit_shopify_checkout_form_event",
 	RECEIVE_CREDIT_CARD_INFO: "receive_credit_card_info_event",
 	REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM: "register_tab_for_submit_shopify_checkout_form_event",
 	REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO: "register_tab_for_receive_credit_card_info_event",
-	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event"
+	ETH_WALLET_TRANSACTION_SUCCESS: "eth_wallet_transaction_success_event",
+	ETH_WALLET_TRANSACTION_FAILURE: "eth_wallet_transaction_failure_event"
+}
+
+function logTransaction(event, transaction) {
+	console.log(transaction)
+	// todo acm pretty up the url string for logging output in papertrail dash
+	let loggingURL =
+	"https://paar-server.herokuapp.com/log?event=" + event + "&data=" + JSON.stringify(transaction);
+	fetch(loggingURL)
+		.then(console.log("logging url server response"));
 }
 
 async function init() {
@@ -28,11 +42,7 @@ async function init() {
 				contentEvent:
 					events.REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM,
 			},
-			function () {
-				console.log(
-					events.REGISTER_TAB_FOR_SUBMIT_SHOPIFY_CHECKOUT_FORM + " callback is executed"
-				);
-			}
+			function () {}
 		);
 
 		chrome.runtime.onMessage.addListener(function (
@@ -41,9 +51,6 @@ async function init() {
 			sendResponse
 		) {
 			if (request.contentEvent === events.SUBMIT_SHOPIFY_CHECKOUT_FORM) {
-				console.log(
-					events.SUBMIT_SHOPIFY_CHECKOUT_FORM + " received in content script"
-				);
 				sendResponse();
 				let c =
 					document.getElementById(
@@ -62,18 +69,13 @@ async function init() {
 		let currentAccount = null;
 
 		function getVirtualCard(transaction) {
-			console.log(
-				"getVirtualCard function callback was executed after transaction sent in content script"
-			);
 			chrome.runtime.sendMessage(
 				{
 					contentEvent:
 						events.ETH_WALLET_TRANSACTION_SUCCESS,
 					data: transaction,
 				},
-				function () {
-					console.log(events.ETH_WALLET_TRANSACTION_SUCCESS + " callback executed");
-				}
+				function () {}
 			);
 		}
 
@@ -89,49 +91,29 @@ async function init() {
 			})
 				.then(getVirtualCard)
 				.catch((err) => {
-					if (err.code === 4001) {
-						console.log(
-							"transaction FAILED WITH 4001"
-						);
-					} else {
-						console.error(err);
-						console.log(
-							"transaction FAILED!!!"
-						);
-					}
+					logTransaction(events.ETH_WALLET_TRANSACTION_FAILURE, {failureCode: String(err.code)})
 				});
 		}
 
 		function getWalletPermission() {
+			logTransaction(events.REQUEST_USER_WALLET_PERMISSION, {})
 			provider.request({
 				method: "eth_requestAccounts",
 			})
 				.then((response) => {
+					logTransaction(events.REQUEST_USER_WALLET_PERMISSION_SUCCESS, {userWalletAddress: response[0]})
 					chrome.runtime.sendMessage(
 						{
 							contentEvent:
 								events.STORE_USER_WALLET_ADDRESS,
 							data: response[0],
 						},
-						function () {
-							console.log(
-								events.STORE_USER_WALLET_ADDRESS + " callback executed"
-							);
-						}
+						function () {}
 					);
 					userWalletAddress = response[0]
 				})
 				.catch((err) => {
-					if (err.code === 4001) {
-						console.log(
-							"permissions fetch FAILED WITH 4001"
-						);
-					} else {
-						console.error(err);
-						console.log(
-							"get PERMISSIONS FFAILED!!!"
-						);
-					}
+					logTransaction(events.REQUEST_USER_WALLET_PERMISSION_FAILURE, {failureCode: String(err.code) })
 				});
 		}
 		getWalletPermission();
@@ -142,10 +124,6 @@ async function init() {
 				data: transactionPrice,
 			},
 			function (response) {
-				console.log(
-					events.CONVERT_PRICE_TO_HEX_TRANSACTION + " event callback executed"
-				);
-
 				transactionHexValue = response.hexValue;
 			}
 		);

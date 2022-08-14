@@ -15,11 +15,7 @@ const events = {
 async function init() {
 	chrome.runtime.sendMessage(
 		{ contentEvent: events.REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO },
-		function () {
-			console.log(
-				events.REGISTER_TAB_FOR_RECEIVE_CREDIT_CARD_INFO + " callback executed"
-			);
-		}
+		function () {}
 	);
 
 	chrome.runtime.onMessage.addListener(function (
@@ -28,9 +24,7 @@ async function init() {
 		sendResponse
 	) {
 		if (request.contentEvent === events.RECEIVE_CREDIT_CARD_INFO) {
-			console.log(
-				events.RECEIVE_CREDIT_CARD_INFO + " received in card-injection.js"
-			);
+
 			let ccValue = request.cardDetails;
 			jQuery('form input[name="number"]').val(ccValue.num);
 			jQuery('form input[name="name"]').val("Tom Smith");
@@ -45,11 +39,7 @@ async function init() {
 					contentEvent:
 						events.CREDIT_CARD_INFO_IS_INJECTED,
 				},
-				function () {
-					console.log(
-						events.CREDIT_CARD_INFO_IS_INJECTED + " callback executed"
-					);
-				}
+				function () {}
 			);
 			sendResponse();
 		}

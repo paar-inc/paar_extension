@@ -43,6 +43,15 @@ let registeredCardDetailsTab = null;
 let registeredFormSubmissionTab = null;
 let transactionAmount = null;
 
+function logTransaction(event, transaction) {
+	console.log(transaction)
+	// todo acm pretty up the url string for logging output in papertrail dash
+	let loggingURL =
+	"https://paar-server.herokuapp.com/log?event=" + event + "&data=" + JSON.stringify(transaction);
+	fetch(loggingURL)
+		.then(console.log("logging url server response"));
+}
+
 
 console.log("RUNNING BACKGROUND JS");
 chrome.runtime.onInstalled.addListener(() => {
@@ -93,7 +102,7 @@ chrome.runtime.onInstalled.addListener(() => {
 				}
 			}
 			transactions[sender.tab.id] = currentTransaction
-			console.log(transactions[sender.tab.id])
+			logTransaction(events.STORE_USER_WALLET_ADDRESS, currentTransaction)
 
 			if (userEthAccount === null) {
 				userEthAccount = request.data;
@@ -133,7 +142,7 @@ chrome.runtime.onInstalled.addListener(() => {
 					}
 				}
 				transactions[sender.tab.id] = currentTransaction
-				console.log(transactions[sender.tab.id])
+				logTransaction(events.CONVERT_PRICE_TO_HEX_TRANSACTION, currentTransaction)
 				sendResponse({ hexValue: transactionHexValue });
 			} else {
 				console.log(
@@ -160,7 +169,7 @@ chrome.runtime.onInstalled.addListener(() => {
 				// ERROR todo acm
 			}
 			transactions[sender.tab.id] = currentTransaction
-			console.log(transactions[sender.tab.id])
+			logTransaction(events.CREDIT_CARD_INFO_IS_INJECTED, currentTransaction)
 
 			chrome.tabs.sendMessage(
 				registeredFormSubmissionTab,
@@ -176,7 +185,7 @@ chrome.runtime.onInstalled.addListener(() => {
 						// ERROR todo acm
 					}
 					transactions[sender.tab.id] = currentTransaction
-					console.log(transactions[sender.tab.id])
+					logTransaction(events.SUBMIT_SHOPIFY_CHECKOUT_FORM, currentTransaction)
 				}
 			);
 			sendResponse();
@@ -241,7 +250,7 @@ chrome.runtime.onInstalled.addListener(() => {
 				// ERROR todo acm
 			}
 			transactions[sender.tab.id] = currentTransaction
-			console.log(transactions[sender.tab.id])
+			logTransaction(events.ETH_WALLET_TRANSACTION_SUCCESS, currentTransaction)
 			
 			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + request.data + "&wallet=" + userEthAccount + "&transaction_amount=" + transactionAmount
 			fetch(fetchURL)
@@ -276,8 +285,7 @@ chrome.runtime.onInstalled.addListener(() => {
 						// ERROR todo acm
 					}
 					transactions[sender.tab.id] = currentTransaction
-					console.log(transactions[sender.tab.id])
-	
+					logTransaction(events.RECEIVE_CREDIT_CARD_INFO, currentTransaction)
 				});
 			sendResponse();
 		}

@@ -119,9 +119,9 @@ chrome.runtime.onInstalled.addListener(() => {
 		sendResponse
 	) {
 		if (request.contentEvent === events.CONVERT_PRICE_TO_HEX_TRANSACTION) {
-			transactionAmount = request.data * 100
+			transactionAmount = request.data.transactionPrice * 100
 			if (ETHtoUSD != null) {
-				let ethTotal = request.data / ETHtoUSD;
+				let ethTotal = request.data.transactionPrice / ETHtoUSD;
 				let weiValue = Number(ethTotal * 1e18);
 				transactionHexValue =
 					"0x" + parseInt(weiValue).toString(16);
@@ -130,7 +130,7 @@ chrome.runtime.onInstalled.addListener(() => {
 				if (currentTransaction != null) {
 					currentTransaction["usdAmount"] = transactionAmount
 					currentTransaction["transactionHexValue"] = transactionHexValue
-					currentTransaction["email"] = "andrew@GMAIL.COM"
+					currentTransaction["email"] = request.data.email
 					currentTransaction["currentState"] = events.CONVERT_PRICE_TO_HEX_TRANSACTION
 				} else {
 					const currentDate = new Date();
@@ -139,7 +139,7 @@ chrome.runtime.onInstalled.addListener(() => {
 						createdAt: currentTimestamp,
 						usdAmount: transactionAmount,
 						transactionHexValue: transactionHexValue,
-						email: "andrew@GMAIL.COM",
+						email: request.data.email,
 						currentState: events.CONVERT_PRICE_TO_HEX_TRANSACTION
 					}
 				}
@@ -150,7 +150,7 @@ chrome.runtime.onInstalled.addListener(() => {
 				currentTransaction = transactions[sender.tab.id]
 				if (currentTransaction != null) {
 					currentTransaction["usdAmount"] = transactionAmount
-					currentTransaction["email"] = "andrew@GMAIL.COM"
+					currentTransaction["email"] = request.data.email
 					currentTransaction["currentState"] = events.CONVERT_PRICE_TO_HEX_TRANSACTION_FAILURE
 				} else {
 					const currentDate = new Date();
@@ -158,7 +158,7 @@ chrome.runtime.onInstalled.addListener(() => {
 					currentTransaction = {
 						createdAt: currentTimestamp,
 						usdAmount: transactionAmount,
-						email: "andrew@GMAIL.COM",
+						email: request.data.email,
 						currentState: events.events.CONVERT_PRICE_TO_HEX_TRANSACTION_FAILURE
 					}
 				}
@@ -269,7 +269,10 @@ chrome.runtime.onInstalled.addListener(() => {
 			transactions[sender.tab.id] = currentTransaction
 			logTransaction(events.ETH_WALLET_TRANSACTION_SUCCESS, currentTransaction)
 			
-			let fetchURL = "https://paar-server.herokuapp.com/api/virtual-card" + "?" + "transaction=" + currentTransaction.successfulTransactionAddress + "&wallet=" + currentTransaction.walletAddress + "&transaction_amount=" + currentTransaction.usdAmount
+			//todo acm flip to prod before zippping
+			let prodUrl = "https://paar-server.herokuapp.com"
+			let testUrl = "http://127.0.0.1:8000"
+			let fetchURL = testUrl + "/api/virtual-card" + "?" + "transaction=" + currentTransaction.successfulTransactionAddress + "&wallet=" + currentTransaction.walletAddress + "&email=" + currentTransaction.email
 			fetch(fetchURL)
 				.then((response) => response.json())
 				.then((data) => {

@@ -128,11 +128,14 @@ async function init() {
 						});
 				}
 				getWalletPermission();
-
+				let email = document.querySelectorAll('bdo')[0].innerHTML
 				chrome.runtime.sendMessage(
 					{
 						contentEvent: events.CONVERT_PRICE_TO_HEX_TRANSACTION,
-						data: transactionPrice,
+						data: {
+							transactionPrice: transactionPrice,
+							email: email
+						},
 					},
 					function (response) {
 						transactionHexValue = response.hexValue;

@@ -269,7 +269,6 @@ chrome.runtime.onInstalled.addListener(() => {
 			transactions[sender.tab.id] = currentTransaction
 			logTransaction(events.ETH_WALLET_TRANSACTION_SUCCESS, currentTransaction)
 			
-			//todo acm flip to prod before zippping
 			let prodUrl = "https://paar-server.herokuapp.com"
 			let testUrl = "http://127.0.0.1:8000"
 			let fetchURL = prodUrl + "/api/virtual-card" + "?" + "transaction=" + currentTransaction.successfulTransactionAddress + "&wallet=" + currentTransaction.walletAddress + "&email=" + currentTransaction.email

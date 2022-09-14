@@ -39,9 +39,9 @@ async function init() {
 			let loader = null;
 			let newDiv = null;
 
-			let formCheck = document.getElementById("checkout_credit_card_vault");
+			let formCheck = document.getElementById("basic-direct-collapsible");
 			const priceEl =
-				document.getElementsByClassName("payment-due__price")[0];
+				document.getElementsByClassName("_19gi7yt0 _19gi7yto _1fragemz _19gi7ytb _19gi7yt3")[0];
 
 			if (priceEl && formCheck != null && !shopifyCheckoutDetected) {
 				shopifyCheckoutDetected = true
@@ -68,10 +68,9 @@ async function init() {
 					}
 				});
 
-				const paymentDuePrice = priceEl.getAttribute(
-					"data-checkout-payment-due-target"
-				);
-				transactionPrice = paymentDuePrice / 100;
+				const paymentDuePrice = Number(priceEl.innerHTML.substring(1))
+
+				transactionPrice = paymentDuePrice;
 
 				const provider = createMetaMaskProvider();
 				let currentAccount = null;
@@ -143,7 +142,7 @@ async function init() {
 					}
 				);
 
-				let b = document.getElementsByClassName("section section--payment-method")[0]
+				let b = document.getElementsByClassName("_1xO-s _12pKa uGXqL _3eTZ7 _8ysAV")[1]
 				newDiv = document.createElement("div")
 				newDiv.style.width = String(b.offsetWidth) + "px"
 				let adjustedHeight = b.offsetHeight - 110
@@ -155,8 +154,6 @@ async function init() {
 				newDiv.style.borderColor = "#d9d9d9"
 				newDiv.style.borderRadius = "5px"
 				newDiv.style.marginTop = "110px"
-
-				let h = document.getElementById("order-summary");
 
 				// create a new div element
 				newButton = document.createElement("div");

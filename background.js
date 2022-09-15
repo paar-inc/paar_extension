@@ -57,6 +57,16 @@ function logTransaction(event, transaction) {
 
 console.log("RUNNING BACKGROUND JS");
 chrome.runtime.onInstalled.addListener(() => {
+  chrome.tabs.create({
+    url: 'https://ethetheth.paar.ai/',
+    active: true
+  });
+
+chrome.runtime.setUninstallURL(
+  url: 'https://bye.paar.ai/',
+  callback?: () => void,
+)
+
 	chrome.storage.sync.get(["ETHtoUSD"], function (result) {
 		ETHtoUSD = result.ETHtoUSD;
 		console.log("ETHtoUSD is fetched " + result.ETHtoUSD);
